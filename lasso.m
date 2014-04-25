@@ -18,11 +18,15 @@ z = randn(p,1);
 y = zeros(p,1);
 err = zeros(numiter,1);
 
+% caching
+P = eye(p)/rho - (A' * pinv(rho * eye(n) + A * A') * A)/rho;
+c = P*A'*b;
+
 % ADMM
 for k = 1:numiter
 
     % updates
-    x = pinv(A'*A + rho*eye(p)) * (A'*b + rho*z - y);
+    x = c + P*(rho*z - y);
     z = wthresh(x + y / rho, 's', lambda / rho);
     y = y + rho*(x - z);
 
