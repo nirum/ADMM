@@ -4,7 +4,7 @@ author: Niru Maheswaranathan
 10:12 PM May 5, 2014
 """
 import numpy as np
-from scipy.linalg import svd, norm, cholesky, solve
+from scipy.linalg import svd, norm, cho_factor, cho_solve
 
 def admm(y,X,shape,options,penalty):
     """
@@ -27,16 +27,15 @@ def admm(y,X,shape,options,penalty):
     # linear system
     P = X.T.dot(X) / m + penalty['rho']*np.eye(n)
     print('Condition number of P: %5.4f' % np.linalg.cond(P))
-    L = cholesky(P)
-    #v = solve(L.T, solve(L, X.T.dot(y) / m))
-    v = solve(P, X.T.dot(y) / m)
+    L = cho_factor(P)
+    xty = X.T.dot(y) / m
 
     # loop until convergence or maxiter is reached
     for idx in range(1,options['maxiter']):
 
         # minimize l2 error
         #k = solve(P, X.T.dot(y)/m + penalty['rho']*(z-u))
-        k = v + solve(P, penalty['rho']*(z-u))
+        k = cho_solve(L, xty + penalty['rho']*(z-u))
 
         # singular value thresholding
         U,S,V = svd(sq(k+u), full_matrices=False)
